@@ -1,0 +1,17 @@
+.news-container .card .card-image img {
+  height: 250px;
+}
+
+.news-container .card .card-image .card-title {
+  font-size: 1.25rem;
+}
+
+.news-container .card .card-content {
+  height: 100px;
+}
+
+.news-container .card .card-content p {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

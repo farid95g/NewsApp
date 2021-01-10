@@ -12,6 +12,7 @@ function customHttp() {
               return;
             }
             const response = JSON.parse(xhr.responseText);
+            cb(null, response);
           });
         
           xhr.addEventListener("error", () => {
@@ -20,7 +21,7 @@ function customHttp() {
         
           xhr.send();
         } catch (error) {
-          cb(error)
+          cb(error);
         }
     },
     post(url, body, headers, cb) {
@@ -49,7 +50,7 @@ function customHttp() {
       
         xhr.send(JSON.stringify(body));
       } catch (error) {
-        cb(error)
+        cb(error);
       }
     },    
   }
@@ -59,16 +60,69 @@ function customHttp() {
 const http = customHttp();
 
 const newsService = (function () { 
-  const apiKey = "6425d4455062420ca98c5a9cab2ffc14";
-  const apiUrl = "http://newsapi.org/v2";
+  const apiKey = "00767ad3c6d218328ec8b5ec588b14d6";
+  const apiUrl = "https://gnews.io/api/v4";
 
   return {
-    topHeadlines() { },
-    everything() { }
+    topHeadlines(country = "ua", cb) { 
+      http.get(`${apiUrl}/top-headlines?token=${apiKey}&country=${country}`, cb);
+    },
+    everything(query, cb) { 
+      http.get(`${apiUrl}/search?q=${query}&token=${apiKey}`, cb);
+    }
   }
 })();
 
 // Init selects
 document.addEventListener("DOMContentLoaded", function () {
   M.AutoInit();
+  loadNews();  // We are getting an object with the field "articles" which is an array of 20 objects, and each object has author, content, description, publishedAt, source, title, url, and urlToImage fields.
 });
+
+
+// Load news function
+function loadNews() {
+  newsService.topHeadlines('ua', onGetResponse);
+}
+
+
+// Function on get response from server
+function onGetResponse(err, res) {
+  renderNews(res.articles);
+  console.log(res.articles);
+}
+
+
+// Function for rendering news
+function renderNews(news) {
+  const newsContainer = document.querySelector(".news-container .row");
+  let fragment = '';
+
+  news.forEach(newsItem => {
+    const el = newsTemplate(newsItem);
+    fragment += el;
+  });
+
+  newsContainer.insertAdjacentHTML("afterbegin", fragment);
+}
+
+
+// News item template function
+function newsTemplate({ description, image, title, url }) {
+  return `
+    <div class="col s6">
+      <div class="card">
+        <div class="card-image">
+          <img src="${image}" />
+          <span class="card-title">${title || ''}</span>
+        </div>
+        <div class="card-content">
+          <p>${description || ''}</p>
+        </div>
+        <div class="card-action">
+          <a href="${url}">Read more...</a>
+        </div>
+      </div>
+    </div>
+  `;
+}
