@@ -92,6 +92,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // Load news function
 function loadNews() {
+  showLoader();
+
   const country = countrySelect.value;
   const searchQuery = searchInput.value;
 
@@ -105,6 +107,8 @@ function loadNews() {
 
 // Function on get response from server
 function onGetResponse(err, res) {
+  removeLoader();
+
   if (err) {
     showAlert(err, "error-msg");
     return;
@@ -182,4 +186,33 @@ function newsTemplate({ description, image, title, url }) {
 
 function showAlert(msg, type = "success") {
   M.toast({ html: msg, classes: type });
+}
+
+
+// Show loader function
+function showLoader() {
+  clearContainer(document.querySelector(".news-container .row"));
+  document.querySelector(".news-container .row").insertAdjacentHTML("beforebegin", `
+    <div class="preloader-wrapper big active" style="margin: 0 auto !important; display: block !important;">
+      <div class="spinner-layer spinner-blue-only">
+        <div class="circle-clipper left">
+          <div class="circle"></div>
+        </div><div class="gap-patch">
+          <div class="circle"></div>
+        </div><div class="circle-clipper right">
+          <div class="circle"></div>
+        </div>
+      </div>
+    </div>
+  `);
+}
+
+
+// Remove loader function
+function removeLoader() {
+  const loader = document.querySelector(".preloader-wrapper");
+
+  if (loader) {
+    loader.remove();
+  }
 }
