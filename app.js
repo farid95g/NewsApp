@@ -67,35 +67,72 @@ const newsService = (function () {
     topHeadlines(country = "ua", cb) { 
       http.get(`${apiUrl}/top-headlines?token=${apiKey}&country=${country}`, cb);
     },
-    everything(query, cb) { 
+    search(query, cb) { 
       http.get(`${apiUrl}/search?q=${query}&token=${apiKey}`, cb);
     }
   }
 })();
 
+// Elements
+const form = document.forms["newsControls"];
+const countrySelect = form.elements["country"];
+const searchInput = form.elements["search"];
+
+form.addEventListener("submit", e => {
+  e.preventDefault();
+  loadNews();
+});
+
 // Init selects
 document.addEventListener("DOMContentLoaded", function () {
   M.AutoInit();
-  loadNews();  // We are getting an object with the field "articles" which is an array of 20 objects, and each object has author, content, description, publishedAt, source, title, url, and urlToImage fields.
+  loadNews();
 });
 
 
 // Load news function
 function loadNews() {
-  newsService.topHeadlines('ua', onGetResponse);
+  const country = countrySelect.value;
+  const searchQuery = searchInput.value;
+
+  if (!searchQuery) {
+    newsService.topHeadlines(country, onGetResponse);
+  } else {
+    newsService.search(searchQuery, onGetResponse);
+  }
 }
 
 
 // Function on get response from server
 function onGetResponse(err, res) {
+  if (err) {
+    showAlert(err, "error-msg");
+    return;
+  }
+
+  if (!res.articles.length) {
+    const emptyMessage = `
+    <div class="col s12 red darken-4 empty-message">
+      <h3 class="align-center">We could not find the news you are looking for...</h3>
+    </div>
+    `;
+    form.insertAdjacentHTML("afterend", emptyMessage);
+    clearContainer(document.querySelector(".news-container .row"));
+    return;
+  }
+
   renderNews(res.articles);
-  console.log(res.articles);
 }
 
 
 // Function for rendering news
 function renderNews(news) {
   const newsContainer = document.querySelector(".news-container .row");
+
+  if (newsContainer.children) {
+    clearContainer(newsContainer);
+  }
+
   let fragment = '';
 
   news.forEach(newsItem => {
@@ -103,7 +140,22 @@ function renderNews(news) {
     fragment += el;
   });
 
+  if (document.querySelector(".empty-message")) {
+    document.querySelector(".empty-message").remove();
+  }
+
   newsContainer.insertAdjacentHTML("afterbegin", fragment);
+}
+
+
+// Function clear container
+function clearContainer(container) {
+  let child = container.lastElementChild;
+
+  while (child) {
+    container.removeChild(child);
+    child = container.lastElementChild;
+  }
 }
 
 
@@ -125,4 +177,9 @@ function newsTemplate({ description, image, title, url }) {
       </div>
     </div>
   `;
+}
+
+
+function showAlert(msg, type = "success") {
+  M.toast({ html: msg, classes: type });
 }
